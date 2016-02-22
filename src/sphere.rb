@@ -1,4 +1,7 @@
+require_relative 'scene_object'
+
 class Sphere < SceneObject
+
   attr_reader :pos, :radius
 
   def initialize(pos, radius)

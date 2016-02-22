@@ -8,6 +8,9 @@ class SimpleTracer
   def initialize
     setup_projection
     setup_scene
+  end
+
+  def render
     render_scene
   end
 
@@ -30,27 +33,30 @@ class SimpleTracer
 
   def render_scene
     @pixel_buffer = []
-    @screen_height_in_pixels.times do |y|
-      @pixel_buffer[y] = []
-      pixel_y = (@screen_height_in_world_units / @screen_height_in_pixels * -y) + (@screen_height_in_world_units / 2)
-      @screen_width_in_pixels.times do |x|
-        # shoot a ray through the center of the pixel[y][x]
+    @screen_height_in_pixels.times do |num_pixel_y|
+      @pixel_buffer[num_pixel_y] = []
+      screen_intersect_y = (@screen_height_in_world_units / @screen_height_in_pixels * -num_pixel_y) + (@screen_height_in_world_units / 2)
+      @screen_width_in_pixels.times do |num_pixel_x|
+        screen_intersect_x = (@screen_width_in_world_units / @screen_width_in_pixels * num_pixel_x) - (@screen_width_in_world_units / 2)
+
+        # shoot a ray through the center of the pixel[num_pixel_y][num_pixel_x]
         # TODO: shoot through the middle instead of the corners
-        pixel_x = (@screen_width_in_world_units / @screen_width_in_pixels * x) - (@screen_width_in_world_units / 2)
+        screen_intersect_pos = Vector.new(screen_intersect_x, screen_intersect_y, 0)
+        ray_to_screen_intersect_uvec = (screen_intersect_pos - @projection_ray_origin).normalize
 
-        pixel_pos = Vector.new(pixel_x, pixel_y, 0)
-        ray_to_pixel_uvec = (pixel_pos - @projection_ray_origin).normalize
+        ray = Ray.new(@projection_ray_origin, ray_to_screen_intersect_uvec)
 
-        ray = Ray.new(@projection_ray_origin, ray_to_pixel_uvec)
+        calc_pixel_value(num_pixel_y, num_pixel_x, ray)
+      end
+    end
+  end
 
-        # debug
-        @scene.each do |obj|
-          if obj.intersects?(ray)
-            @pixel_buffer[y][x] = [255, 127, 0]
-          else
-            @pixel_buffer[y][x] = [0, 255, 255]
-          end
-        end
+  def calc_pixel_value(num_pixel_y, num_pixel_x, ray)
+    @scene.each do |obj|
+      if obj.intersects?(ray)
+        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 255, 0]
+      else
+        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 255, 255]
       end
     end
   end

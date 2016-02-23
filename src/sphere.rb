@@ -1,9 +1,6 @@
 require_relative 'scene_object'
 
 class Sphere < SceneObject
-
-  attr_reader :pos, :radius
-
   def initialize(pos, radius)
     @pos = pos
     @radius = radius
@@ -22,15 +19,15 @@ class Sphere < SceneObject
     discriminant =
       (u_dot_delta_pos * u_dot_delta_pos) -
       (delta_pos_length * delta_pos_length) +
-      (radius * radius)
+      (@radius * @radius)
 
     if discriminant < 0
-      return false
+      false
     else
       sqrt_discriminant = Math.sqrt(discriminant)
       intersection_distance = [u_dot_delta_pos + sqrt_discriminant, u_dot_delta_pos - sqrt_discriminant].min
       @last_intersection_point = ray.origin_pos + ray.direction_uvec.scale(intersection_distance)
-      return true
+      true
     end
   end
 end

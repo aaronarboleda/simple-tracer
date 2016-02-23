@@ -31,6 +31,18 @@ class Vector
     end
   end
 
+  def cross(obj)
+    if obj.is_a?(Vector)
+      Vector.new(
+        (@y * obj.z) - (@z * obj.y),
+        (@z * obj.x) - (@x * obj.z),
+        (@x * obj.y) - (@y * obj.x)
+      )
+    else
+      raise_wrong_type_error(__method__.to_s)
+    end
+  end
+
   def scale(scalar)
     Vector.new(@x * scalar, @y * scalar, @z * scalar)
   end

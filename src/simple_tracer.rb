@@ -1,6 +1,7 @@
 require_relative 'vector'
 require_relative 'ray'
 require_relative 'sphere'
+require_relative 'polygon'
 
 class SimpleTracer
   attr_reader :pixel_buffer
@@ -28,7 +29,23 @@ class SimpleTracer
 
   def setup_scene
     @scene = []
-    @scene << Sphere.new(Vector.new(0, 0, -8), 5)
+    #@scene << Sphere.new(Vector.new(0, 0, -8), 5)
+    @scene << Polygon.new(
+      [
+        Vector.new(-5, -5, -8),
+        Vector.new(5, -5, -8),
+        Vector.new(5, 5, -8),
+        Vector.new(-5, 5, -8),
+      ]
+    )
+    @scene << Polygon.new(
+      [
+        Vector.new(-10, -5, 10),
+        Vector.new(10, -5, 10),
+        Vector.new(10, -5, -10),
+        Vector.new(-10, -5, -10),
+      ]
+    )
   end
 
   def render_scene
@@ -56,7 +73,7 @@ class SimpleTracer
       if obj.intersects?(ray)
         @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 255, 0]
       else
-        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 255, 255]
+        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 0, 0]
       end
     end
   end

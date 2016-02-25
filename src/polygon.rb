@@ -7,6 +7,8 @@ class Polygon < SceneObject
   end
 
   def intersects?(ray)
+    has_intersection = false
+
     if ray.direction_uvec * @normal < 0
 
       # ray intersects plane specified by polygon
@@ -19,28 +21,29 @@ class Polygon < SceneObject
         -(plane_coefficient_d + (@normal * ray.origin_pos)) /
         (@normal * ray.direction_uvec)
 
-      # now plug distance back into ray formula to get intersection point on plane
-      intersection_point =
-        ray.origin_pos + ray.direction_uvec.scale(intersection_distance)
+      # project ray to get intersection point on plane
+      intersection_point = ray.project(intersection_distance)
 
       # finally, do inside-outside test to check if intersection on plane is within polygon
-      v = 0
+      # intersection occurs within polygon if it happens to the left of all line segments
       is_inside_polygon = true
-      while v < @vertices.count do
-        first_vertex = @vertices[v]
-        second_vertex = (v + 1 == @vertices.count) ? @vertices[0] : @vertices[v + 1]
-        facing_vector = @normal.cross(second_vertex - first_vertex)
-        if facing_vector * (intersection_point - first_vertex) <= 0
+      @vertices.each_with_index do |current_vertex, index|
+        next_vertex = (index + 1 < @vertices.count) ? @vertices[index + 1] : @vertices[0]
+
+        facing_vector = @normal.cross(next_vertex - current_vertex)
+        if facing_vector * (intersection_point - current_vertex) <= 0
           is_inside_polygon = false
           break
-        else
-          v += 1
         end
       end
-      is_inside_polygon
-    else
-      false
+
+      if is_inside_polygon
+        has_intersection = true
+        ray.intersection_distance = intersection_distance
+      end
     end
+
+    has_intersection
   end
 
   private

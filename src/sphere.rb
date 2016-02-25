@@ -26,7 +26,9 @@ class Sphere < SceneObject
     else
       sqrt_discriminant = Math.sqrt(discriminant)
       intersection_distance = [u_dot_delta_pos + sqrt_discriminant, u_dot_delta_pos - sqrt_discriminant].min
-      @last_intersection_point = ray.origin_pos + ray.direction_uvec.scale(intersection_distance)
+      intersection_point = ray.project(intersection_distance)
+
+      ray.intersection_distance = intersection_distance
       true
     end
   end

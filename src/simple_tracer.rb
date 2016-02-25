@@ -2,6 +2,9 @@ require_relative 'vector'
 require_relative 'ray'
 require_relative 'sphere'
 require_relative 'polygon'
+require_relative 'color'
+require_relative 'light_source'
+require_relative 'scene'
 
 class SimpleTracer
   attr_reader :pixel_buffer
@@ -28,24 +31,24 @@ class SimpleTracer
   end
 
   def setup_scene
-    @scene = []
-    #@scene << Sphere.new(Vector.new(0, 0, -8), 5)
-    @scene << Polygon.new(
-      [
-        Vector.new(-5, -5, -8),
-        Vector.new(5, -5, -8),
-        Vector.new(5, 5, -8),
-        Vector.new(-5, 5, -8),
-      ]
-    )
-    @scene << Polygon.new(
-      [
-        Vector.new(-10, -5, 10),
-        Vector.new(10, -5, 10),
-        Vector.new(10, -5, -10),
-        Vector.new(-10, -5, -10),
-      ]
-    )
+    @scene = Scene.new
+    @scene.add_object(Sphere.new(Vector.new(0, 0, -8), 5))
+    #@scene.add_object(Polygon.new(
+    #  [
+    #    Vector.new(-5, -5, -8),
+    #    Vector.new(5, -5, -8),
+    #    Vector.new(5, 5, -8),
+    #    Vector.new(-5, 5, -8),
+    #  ]
+    #))
+    #@scene.add_object(Polygon.new(
+    #  [
+    #    Vector.new(-10, -5, 10),
+    #    Vector.new(10, -5, 10),
+    #    Vector.new(10, -5, -10),
+    #    Vector.new(-10, -5, -10),
+    #  ]
+    #))
   end
 
   def render_scene
@@ -69,12 +72,19 @@ class SimpleTracer
   end
 
   def calc_pixel_value(num_pixel_y, num_pixel_x, ray)
-    @scene.each do |obj|
-      if obj.intersects?(ray)
-        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 255, 0]
-      else
-        @pixel_buffer[num_pixel_y][num_pixel_x] = [0, 0, 0]
+    intersected_object = nil
+    smallest_intersection_distance = Float::MAX
+    @scene.objects.each do |obj|
+      if obj.intersects?(ray) && ray.intersection_distance < smallest_intersection_distance
+        intersected_object = obj
+        smallest_intersection_distance = ray.intersection_distance
       end
+    end
+
+    if intersected_object
+      @pixel_buffer[num_pixel_y][num_pixel_x] = Color::RED
+    else
+      @pixel_buffer[num_pixel_y][num_pixel_x] = Color::BLACK
     end
   end
 end

@@ -1,6 +1,6 @@
 class Ray
   attr_reader :origin_pos, :direction_uvec
-  attr_accessor :intersection_distance #TODO move out of Ray
+  attr_accessor :intersection_distance, :intersection_point #TODO move out of Ray
 
   def initialize(origin_pos, direction_uvec)
     @origin_pos = origin_pos

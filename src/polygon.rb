@@ -3,7 +3,7 @@ require_relative 'scene_object'
 class Polygon < SceneObject
   def initialize(vertices)
     @vertices = vertices
-    calc_normal
+    @normal = calc_normal
   end
 
   def intersects?(ray)
@@ -40,10 +40,15 @@ class Polygon < SceneObject
       if is_inside_polygon
         has_intersection = true
         ray.intersection_distance = intersection_distance
+        ray.intersection_point = intersection_point
       end
     end
 
     has_intersection
+  end
+
+  def normal(pos_on_object)
+    @normal
   end
 
   private
@@ -53,6 +58,6 @@ class Polygon < SceneObject
     first_vector = @vertices[1] - @vertices[0]
     second_vector = @vertices[2] - @vertices[0]
 
-    @normal = first_vector.cross(second_vector).normalize
+    first_vector.cross(second_vector).normalize
   end
 end

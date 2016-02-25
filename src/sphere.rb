@@ -29,7 +29,12 @@ class Sphere < SceneObject
       intersection_point = ray.project(intersection_distance)
 
       ray.intersection_distance = intersection_distance
+      ray.intersection_point = intersection_point
       true
     end
+  end
+
+  def normal(pos_on_obj)
+    (pos_on_obj - @pos).normalize
   end
 end

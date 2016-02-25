@@ -32,23 +32,22 @@ class SimpleTracer
 
   def setup_scene
     @scene = Scene.new
-    @scene.add_object(Sphere.new(Vector.new(0, 0, -8), 5))
-    #@scene.add_object(Polygon.new(
-    #  [
-    #    Vector.new(-5, -5, -8),
-    #    Vector.new(5, -5, -8),
-    #    Vector.new(5, 5, -8),
-    #    Vector.new(-5, 5, -8),
-    #  ]
-    #))
-    #@scene.add_object(Polygon.new(
-    #  [
-    #    Vector.new(-10, -5, 10),
-    #    Vector.new(10, -5, 10),
-    #    Vector.new(10, -5, -10),
-    #    Vector.new(-10, -5, -10),
-    #  ]
-    #))
+    @scene.add_light_source(LightSource.new(Vector.new(4, 6, 2), Color::CYAN))
+    @scene.add_light_source(LightSource.new(Vector.new(-4, 3, 2), [1.0, 0.7, 0.8]))
+
+    # snowman
+    @scene.add_object(Sphere.new(Vector.new(-3, -3, -6), 2))
+    @scene.add_object(Sphere.new(Vector.new(-3, 0.3, -6), 1.5))
+    @scene.add_object(Sphere.new(Vector.new(-3, 2.6, -6), 1))
+
+    @scene.add_object(Polygon.new(
+      [
+        Vector.new(-10, -5, 10),
+        Vector.new(10, -5, 10),
+        Vector.new(10, -5, -20),
+        Vector.new(-10, -5, -20),
+      ]
+    ))
   end
 
   def render_scene
@@ -73,16 +72,45 @@ class SimpleTracer
 
   def calc_pixel_value(num_pixel_y, num_pixel_x, ray)
     intersected_object = nil
-    smallest_intersection_distance = Float::MAX
+    intersection_distance = Float::MAX
+    intersection_point = nil
+
     @scene.objects.each do |obj|
-      if obj.intersects?(ray) && ray.intersection_distance < smallest_intersection_distance
+      if obj.intersects?(ray) && ray.intersection_distance < intersection_distance
         intersected_object = obj
-        smallest_intersection_distance = ray.intersection_distance
+        intersection_distance = ray.intersection_distance
+        intersection_point =  ray.intersection_point
       end
     end
 
     if intersected_object
-      @pixel_buffer[num_pixel_y][num_pixel_x] = Color::RED
+      # check for contribution from each light source
+      light_source_contributions = []
+      @scene.light_sources.each do |light_source|
+        to_light_vector = (light_source.pos - intersection_point).normalize
+        shadow_ray = Ray.new(intersection_point, to_light_vector)
+        is_shadowed = @scene.objects.detect do |obj|
+          obj != intersected_object && obj.intersects?(shadow_ray)
+        end
+
+        unless is_shadowed
+          # diffuse contribution is proportional to N * L
+          diffuse_incidence = intersected_object.normal(intersection_point) * to_light_vector
+
+          # TODO Move attenuation somewhere else
+          distance_to_light = (light_source.pos - intersection_point).length
+          attenuation = 1.0 / (0.1 + 0.1 * distance_to_light + 0.02 * distance_to_light * distance_to_light)
+
+          light_source_contributions << light_source.color.map do |rgb|
+            rgb * diffuse_incidence * attenuation
+          end
+        end
+
+        @pixel_buffer[num_pixel_y][num_pixel_x] =
+          light_source_contributions.reduce([0.0, 0.0, 0.0]) do |memo, contrib|
+            [memo[0] + contrib[0], memo[1] + contrib[1], memo[2] + contrib[2]]
+          end
+      end
     else
       @pixel_buffer[num_pixel_y][num_pixel_x] = Color::BLACK
     end

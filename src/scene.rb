@@ -11,6 +11,6 @@ class Scene
   end
 
   def add_light_source(light_source)
-    @light_source << light_source
+    @light_sources << light_source
   end
 end

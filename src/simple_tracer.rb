@@ -32,14 +32,25 @@ class SimpleTracer
 
   def setup_scene
     @scene = Scene.new
-    @scene.add_light_source(LightSource.new(Vector.new(4, 6, 2), Color::CYAN))
-    @scene.add_light_source(LightSource.new(Vector.new(-4, 3, 2), [1.0, 0.7, 0.8]))
+    @scene.add_light_source(LightSource.new(Vector.new(4, 2, 4), Color::CYAN))
+    @scene.add_light_source(LightSource.new(Vector.new(-3, 0, 2), [1.0, 0.7, 0.8]))
+    @scene.add_light_source(LightSource.new(Vector.new(15, 2, -5), Color::GREEN))
 
     # snowman
     @scene.add_object(Sphere.new(Vector.new(-3, -3, -6), 2))
-    @scene.add_object(Sphere.new(Vector.new(-3, 0.3, -6), 1.5))
-    @scene.add_object(Sphere.new(Vector.new(-3, 2.6, -6), 1))
+    @scene.add_object(Sphere.new(Vector.new(-3, 0.2, -6), 1.5))
+    @scene.add_object(Sphere.new(Vector.new(-3, 2.5, -6), 1))
 
+    #eyes
+    @scene.add_object(Sphere.new(Vector.new(-3.25, 2.55, -5), 0.15))
+    @scene.add_object(Sphere.new(Vector.new(-2.65, 2.55, -5), 0.15))
+
+    #baby snowman
+    @scene.add_object(Sphere.new(Vector.new(1, -4.2, -5.5), 0.8))
+    @scene.add_object(Sphere.new(Vector.new(1, -3.15, -5.5), 0.6))
+    @scene.add_object(Sphere.new(Vector.new(1, -2.20, -5.5), 0.4))
+
+    # floor
     @scene.add_object(Polygon.new(
       [
         Vector.new(-10, -5, 10),
@@ -48,6 +59,34 @@ class SimpleTracer
         Vector.new(-10, -5, -20),
       ]
     ))
+
+    #tree bottom
+    @scene.add_object(Polygon.new(
+      [
+        Vector.new(3, -4, -7.5),
+        Vector.new(7, -4, -7.5),
+        Vector.new(5, -1, -7.5)
+      ]
+    ))
+
+    #tree center
+    @scene.add_object(Polygon.new(
+      [
+        Vector.new(3.5, -2.5, -7.5),
+        Vector.new(6.5, -2.5, -7.5),
+        Vector.new(5, 0, -7.5)
+      ]
+    ))
+
+    #tree top
+    @scene.add_object(Polygon.new(
+      [
+        Vector.new(4, -1, -7.5),
+        Vector.new(6, -1, -7.5),
+        Vector.new(5, 0.3, -7.5)
+      ]
+    ))
+
   end
 
   def render_scene
@@ -112,7 +151,7 @@ class SimpleTracer
           end
       end
     else
-      @pixel_buffer[num_pixel_y][num_pixel_x] = Color::BLACK
+      @pixel_buffer[num_pixel_y][num_pixel_x] = [0.2, 0.2, 0.2]
     end
   end
 end

@@ -1,10 +1,7 @@
 require_relative 'vector'
 require_relative 'ray'
-require_relative 'sphere'
-require_relative 'polygon'
-require_relative 'color'
-require_relative 'light_source'
 require_relative 'scene'
+require_relative 'light'
 
 class SimpleTracer
   attr_reader :pixel_buffer
@@ -21,8 +18,8 @@ class SimpleTracer
   private
 
   def setup_projection
-    @screen_width_in_pixels = 800
-    @screen_height_in_pixels = 450
+    @screen_width_in_pixels = 640
+    @screen_height_in_pixels = 360
 
     @screen_width_in_world_units = 16.0
     @screen_height_in_world_units = 9.0
@@ -142,9 +139,8 @@ class SimpleTracer
           # diffuse contribution is proportional to N * L
           diffuse_incidence = intersected_object.normal(intersection_point) * to_light_vector
 
-          # TODO Move attenuation somewhere else
           distance_to_light = (light_source.pos - intersection_point).length
-          attenuation = 1.0 / (0.1 + 0.05 * distance_to_light + 0.01 * distance_to_light * distance_to_light)
+          attenuation = Light.attenuate(distance_to_light)
 
           light_source_contributions << light_source.color.map do |rgb|
             rgb * diffuse_incidence * attenuation

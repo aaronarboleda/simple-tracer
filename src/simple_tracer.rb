@@ -21,8 +21,8 @@ class SimpleTracer
   private
 
   def setup_projection
-    @screen_width_in_pixels = 640
-    @screen_height_in_pixels = 360
+    @screen_width_in_pixels = 800
+    @screen_height_in_pixels = 450
 
     @screen_width_in_world_units = 16.0
     @screen_height_in_world_units = 9.0
@@ -32,34 +32,39 @@ class SimpleTracer
 
   def setup_scene
     @scene = Scene.new
-    @scene.add_light_source(LightSource.new(Vector.new(4, 2, 4), Color::CYAN))
-    @scene.add_light_source(LightSource.new(Vector.new(-3, 0, 2), [1.0, 0.7, 0.8]))
-    @scene.add_light_source(LightSource.new(Vector.new(15, 2, -5), Color::GREEN))
+    @scene.add_light_source(Vector.new(4, 4, 4), Color::CYAN)
+    @scene.add_light_source(Vector.new(-3, 5, 2), [1.0, 0.7, 0.8])
+    @scene.add_light_source(Vector.new(15, 4, -5), Color::GREEN)
+    #@scene.add_light_source(Vector.new(5, 5, -10), [1.0, 0.7, 0.8])
 
     # snowman
-    @scene.add_object(Sphere.new(Vector.new(-3, -3, -6), 2))
-    @scene.add_object(Sphere.new(Vector.new(-3, 0.2, -6), 1.5))
-    @scene.add_object(Sphere.new(Vector.new(-3, 2.5, -6), 1))
+    @scene.add_sphere(Vector.new(-3, -3, -6), 2)
+    @scene.add_sphere(Vector.new(-3, 0.2, -6), 1.5)
+    @scene.add_sphere(Vector.new(-3, 2.5, -6), 1)
 
     #eyes
-    @scene.add_object(Sphere.new(Vector.new(-3.25, 2.55, -5), 0.15))
-    @scene.add_object(Sphere.new(Vector.new(-2.65, 2.55, -5), 0.15))
+    @scene.add_sphere(Vector.new(-3.25, 2.55, -5), 0.15)
+    @scene.add_sphere(Vector.new(-2.65, 2.55, -5), 0.15)
 
     #baby snowman
-    @scene.add_object(Sphere.new(Vector.new(1, -4.2, -5.5), 0.8))
-    @scene.add_object(Sphere.new(Vector.new(1, -3.15, -5.5), 0.6))
-    @scene.add_object(Sphere.new(Vector.new(1, -2.20, -5.5), 0.4))
+    @scene.add_sphere(Vector.new(1, -4.2, -5.5), 0.8)
+    @scene.add_sphere(Vector.new(1, -3.15, -5.5), 0.6)
+    @scene.add_sphere(Vector.new(1, -2.20, -5.5), 0.4)
 
     # floor
-    @scene.add_object(Polygon.new(
+    @scene.add_polygon(
       [
         Vector.new(-10, -5, 10),
         Vector.new(10, -5, 10),
         Vector.new(10, -5, -20),
         Vector.new(-10, -5, -20),
       ]
-    ))
+    )
 
+    # cube
+    @scene.add_cube(Vector.new(5.0, -3.5, -7.5), 3.0)
+
+=begin
     #tree bottom
     @scene.add_object(Polygon.new(
       [
@@ -86,6 +91,7 @@ class SimpleTracer
         Vector.new(5, 0.3, -7.5)
       ]
     ))
+=end
 
   end
 
@@ -138,7 +144,7 @@ class SimpleTracer
 
           # TODO Move attenuation somewhere else
           distance_to_light = (light_source.pos - intersection_point).length
-          attenuation = 1.0 / (0.1 + 0.1 * distance_to_light + 0.02 * distance_to_light * distance_to_light)
+          attenuation = 1.0 / (0.1 + 0.05 * distance_to_light + 0.01 * distance_to_light * distance_to_light)
 
           light_source_contributions << light_source.color.map do |rgb|
             rgb * diffuse_incidence * attenuation

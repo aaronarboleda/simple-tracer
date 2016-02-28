@@ -11,7 +11,7 @@ class Polygon < SceneObject
 
     if ray.direction_uvec * @normal < 0
 
-      # ray intersects plane specified by polygon
+      # ray direction intersects plane specified by polygon
       # now get distance to intersection point
 
       # N dot P = -D
@@ -21,26 +21,30 @@ class Polygon < SceneObject
         -(plane_coefficient_d + (@normal * ray.origin_pos)) /
         (@normal * ray.direction_uvec)
 
-      # project ray to get intersection point on plane
-      intersection_point = ray.project(intersection_distance)
+      # intersection may happen at negative distance (i.e. behind ray origin)
+      if intersection_distance > 0
 
-      # finally, do inside-outside test to check if intersection on plane is within polygon
-      # intersection occurs within polygon if it happens to the left of all line segments
-      is_inside_polygon = true
-      @vertices.each_with_index do |current_vertex, index|
-        next_vertex = (index + 1 < @vertices.count) ? @vertices[index + 1] : @vertices[0]
+        # project ray to get intersection point on plane
+        intersection_point = ray.project(intersection_distance)
 
-        facing_vector = @normal.cross(next_vertex - current_vertex)
-        if facing_vector * (intersection_point - current_vertex) <= 0
-          is_inside_polygon = false
-          break
+        # finally, do inside-outside test to check if intersection on plane is within polygon
+        # intersection occurs within polygon if it happens to the left of all line segments
+        is_inside_polygon = true
+        @vertices.each_with_index do |current_vertex, index|
+          next_vertex = (index + 1 < @vertices.count) ? @vertices[index + 1] : @vertices[0]
+
+          facing_vector = @normal.cross(next_vertex - current_vertex)
+          if facing_vector * (intersection_point - current_vertex) <= 0
+            is_inside_polygon = false
+            break
+          end
         end
-      end
 
-      if is_inside_polygon
-        has_intersection = true
-        ray.intersection_distance = intersection_distance
-        ray.intersection_point = intersection_point
+        if is_inside_polygon
+          has_intersection = true
+          ray.intersection_distance = intersection_distance
+          ray.intersection_point = intersection_point
+        end
       end
     end
 

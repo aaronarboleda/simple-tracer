@@ -1,5 +1,11 @@
+require_relative 'color'
+
 class SceneObject
-  attr_accessor :diffuse_rgb
+  attr_accessor :rgb
+
+  def initialize
+    @rgb = Color::WHITE
+  end
 
   def intersects?(ray)
     false

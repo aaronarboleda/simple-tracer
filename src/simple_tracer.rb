@@ -1,8 +1,10 @@
 require_relative 'config'
+require_relative 'scene_parser'
 require_relative 'vector'
 require_relative 'ray'
 require_relative 'scene'
 require_relative 'light'
+require 'pry'
 
 class SimpleTracer
   attr_reader :pixel_buffer
@@ -29,38 +31,7 @@ class SimpleTracer
   end
 
   def setup_scene
-    @scene = Scene.new
-    @scene.add_light_source(Vector.new(4, 4, 4), Color::CYAN)
-    @scene.add_light_source(Vector.new(-3, 5, 2), [1.0, 0.7, 0.8])
-    @scene.add_light_source(Vector.new(15, 4, -5), Color::GREEN)
-    #@scene.add_light_source(Vector.new(5, 5, -10), [1.0, 0.7, 0.8])
-
-    # snowman
-    @scene.add_sphere(Vector.new(-3, -3, -6), 2, Color::RED)
-    @scene.add_sphere(Vector.new(-3, 0.2, -6), 1.5, Color::YELLOW)
-    @scene.add_sphere(Vector.new(-3, 2.5, -6), 1, Color::BLUE)
-
-    #eyes
-    #@scene.add_sphere(Vector.new(-3.25, 2.55, -5), 0.15)
-    #@scene.add_sphere(Vector.new(-2.65, 2.55, -5), 0.15)
-
-    #baby snowman
-    #@scene.add_sphere(Vector.new(1, -4.2, -5.5), 0.8)
-    #@scene.add_sphere(Vector.new(1, -3.15, -5.5), 0.6)
-    #@scene.add_sphere(Vector.new(1, -2.20, -5.5), 0.4)
-
-    # floor
-    @scene.add_polygon(
-      [
-        Vector.new(-10, -5, 10),
-        Vector.new(10, -5, 10),
-        Vector.new(10, -5, -20),
-        Vector.new(-10, -5, -20),
-      ]
-    )
-
-    # cube
-    @scene.add_cube(Vector.new(5.0, -3.5, -7.5), 3.0, Color::GREEN)
+    @scene = SceneParser.new('example.json').parse
   end
 
   def render_scene
@@ -129,7 +100,7 @@ class SimpleTracer
             light_rgb = 1.0
           end
 
-          diffuse_rgb = intersected_object.diffuse_rgb[index]
+          diffuse_rgb = intersected_object.rgb[index]
 
           light_source_contrib << (light_rgb * diffuse_rgb * diffuse_incidence * attenuation)
         end

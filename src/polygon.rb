@@ -2,6 +2,7 @@ require_relative 'scene_object'
 
 class Polygon < SceneObject
   def initialize(vertices)
+    super()
     @vertices = vertices
     @normal = calc_normal
   end

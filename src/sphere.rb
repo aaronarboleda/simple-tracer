@@ -2,6 +2,7 @@ require_relative 'scene_object'
 
 class Sphere < SceneObject
   def initialize(pos, radius)
+    super()
     @pos = pos
     @radius = radius
   end

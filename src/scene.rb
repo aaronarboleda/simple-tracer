@@ -15,23 +15,23 @@ class Scene
     @light_sources << LightSource.new(pos, rgb)
   end
 
-  def add_sphere(pos, radius, rgb = Color::WHITE)
-    obj = Sphere.new(pos, radius)
-    obj.diffuse_rgb = rgb
-    add_object(obj)
+  def add_object(obj)
+    @objects << obj
   end
 
-  def add_polygon(vertices, rgb = Color::WHITE)
-    obj = Polygon.new(vertices)
-    obj.diffuse_rgb = rgb
-    add_object(obj)
+  def self.create_sphere(pos, radius)
+    Sphere.new(pos, radius)
   end
 
-  def add_cube(pos, width, rgb = Color::WHITE)
-    add_box(pos, width, width, width, rgb)
+  def self.create_polygon(vertices)
+    Polygon.new(vertices)
   end
 
-  def add_box(pos, width, height, depth, rgb = Color::WHITE)
+  def self.create_cube(pos, length)
+    create_box(pos, length, length, length)
+  end
+
+  def self.create_box(pos, width, height, depth)
     faces = []
 
     hw = width / 2.0
@@ -74,19 +74,13 @@ class Scene
       Vector.new(vertex.x, -hh, vertex.z)
     end
 
-    faces.each do |face|
+    faces.map! do |face|
       # translate by pos
       face.map! do |vertex|
         vertex + pos
       end
-
-      add_polygon(face, rgb)
     end
-  end
 
-  private
-
-  def add_object(obj)
-    @objects << obj
+    faces
   end
 end

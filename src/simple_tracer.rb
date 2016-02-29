@@ -3,6 +3,7 @@ require_relative 'vector'
 require_relative 'ray'
 require_relative 'scene'
 require_relative 'light'
+require_relative 'raytrace_tree'
 
 class SimpleTracer
   def initialize(scene)
@@ -49,6 +50,19 @@ class SimpleTracer
   end
 
   def calc_pixel_value(num_pixel_y, num_pixel_x, ray)
+    raytrace_tree = RaytraceTree.new
+
+    # initial ray starts off with tree of depth 0
+    generate_ray(ray, raytrace_tree, 0)
+
+    if raytrace_tree.light_value
+      @pixel_buffer[num_pixel_y][num_pixel_x] = RaytraceTree.traverse(raytrace_tree)
+    else
+      @pixel_buffer[num_pixel_y][num_pixel_x] = [0.1, 0.2, 0.2]
+    end
+  end
+
+  def generate_ray(ray, raytrace_tree, depth)
     intersected_object = nil
     intersection_distance = Float::MAX
     intersection_point = nil
@@ -62,14 +76,29 @@ class SimpleTracer
     end
 
     if intersected_object
-      @pixel_buffer[num_pixel_y][num_pixel_x] = get_light_contribution(intersected_object, intersection_point)
-    else
-      @pixel_buffer[num_pixel_y][num_pixel_x] = [0.2, 0.2, 0.2]
+      light_value = light_contribution_from(intersected_object, intersection_point)
+      raytrace_tree.light_value = light_value
+
+      # reflect/refract up to allowed depth
+      if depth < 1
+
+        # R = u - (2u * N) * N
+        reflection_origin = intersection_point
+        surface_normal = intersected_object.normal(intersection_point)
+        reflection_uvec =
+          ray.direction_uvec -
+          surface_normal.scale(
+            ((ray.direction_uvec.scale(2.0)) * surface_normal)).normalize
+        reflection_ray = Ray.new(intersection_point, reflection_uvec)
+
+        raytrace_tree.reflect_node = RaytraceTree.new
+
+        generate_ray(reflection_ray, raytrace_tree.reflect_node, depth + 1)
+      end
     end
   end
 
-  def get_light_contribution(intersected_object, intersection_point)
-    # check for contribution from each light source
+  def light_contribution_from(intersected_object, intersection_point)
     light_source_contributions = []
     @scene.light_sources.each do |light_source|
       to_light_uvec = (light_source.pos - intersection_point).normalize
@@ -87,16 +116,16 @@ class SimpleTracer
         light_source_contrib = []
         light_source.rgb.length.times do |index|
 
-          if Config::LIGHT_SOURCE_RGB_ON
-            light_rgb = light_source.rgb[index]
-          else
-            # white light
-            light_rgb = 1.0
-          end
+          light_rgb = light_source.rgb[index]
 
           diffuse_rgb = intersected_object.rgb[index]
+          if (intersected_object.reflectivity)
+            diffuse_reflectivity = intersected_object.reflectivity
+          else
+            diffuse_reflectivity = 0.5
+          end
 
-          light_source_contrib << (light_rgb * diffuse_rgb * diffuse_incidence * attenuation)
+          light_source_contrib << (light_rgb * diffuse_rgb * diffuse_reflectivity * diffuse_incidence * attenuation)
         end
 
         light_source_contributions << light_source_contrib

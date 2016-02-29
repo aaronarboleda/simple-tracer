@@ -41,9 +41,11 @@ class SceneParser
           array_to_vector(json_vertex)
         end
         rgb = json_object["rgb"]
+        reflectivity = json_object["reflectivity"]
 
         scene_object = Scene.create_polygon(vertices)
         scene_object.rgb = rgb
+        scene_object.reflectivity = reflectivity #TODO Refactor
         scene.add_object(scene_object)
       end
 

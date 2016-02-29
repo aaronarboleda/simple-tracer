@@ -1,7 +1,7 @@
 require_relative 'color'
 
 class SceneObject
-  attr_accessor :rgb
+  attr_accessor :rgb, :reflectivity
 
   def initialize
     @rgb = Color::WHITE

@@ -1,4 +1,3 @@
-require_relative 'config'
 require_relative 'vector'
 require_relative 'ray'
 require_relative 'scene'
@@ -92,6 +91,7 @@ class SimpleTracer
         reflection_ray = Ray.new(intersection_point, reflection_uvec)
 
         raytrace_tree.reflect_node = RaytraceTree.new
+        raytrace_tree.reflect_node.distance_from_parent = intersection_distance
 
         generate_ray(reflection_ray, raytrace_tree.reflect_node, depth + 1)
       end

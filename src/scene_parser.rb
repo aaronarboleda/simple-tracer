@@ -24,7 +24,7 @@ class SceneParser
     json["scene_objects"].each do |json_object|
       scene_object = nil
 
-      break if json_object["name"].start_with?("xxx")
+      next if json_object["name"].start_with?("xxx")
 
       if json_object["type"] == "sphere"
         pos = array_to_vector(json_object["pos"])

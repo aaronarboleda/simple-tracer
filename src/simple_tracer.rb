@@ -1,21 +1,19 @@
 require_relative 'config'
-require_relative 'scene_parser'
 require_relative 'vector'
 require_relative 'ray'
 require_relative 'scene'
 require_relative 'light'
-require 'pry'
 
 class SimpleTracer
-  attr_reader :pixel_buffer
-
-  def initialize
+  def initialize(scene)
+    @scene = scene
     setup_projection
-    setup_scene
   end
 
   def render
     render_scene
+
+    @pixel_buffer
   end
 
   private
@@ -28,10 +26,6 @@ class SimpleTracer
     @screen_height_in_world_units = 9.0
 
     @projection_ray_origin = Vector.new(0, 0, 12)
-  end
-
-  def setup_scene
-    @scene = SceneParser.new('example.json').parse
   end
 
   def render_scene

@@ -1,8 +1,8 @@
 class LightSource
-  attr_reader :pos, :color
+  attr_reader :pos, :rgb
 
-  def initialize(pos, color)
+  def initialize(pos, rgb)
     @pos = pos
-    @color = color
+    @rgb = rgb
   end
 end

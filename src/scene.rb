@@ -11,23 +11,27 @@ class Scene
     @light_sources = []
   end
 
-  def add_light_source(pos, color)
-    @light_sources << LightSource.new(pos, color)
+  def add_light_source(pos, rgb)
+    @light_sources << LightSource.new(pos, rgb)
   end
 
-  def add_sphere(pos, radius)
-    add_object(Sphere.new(pos, radius))
+  def add_sphere(pos, radius, rgb = Color::WHITE)
+    obj = Sphere.new(pos, radius)
+    obj.diffuse_rgb = rgb
+    add_object(obj)
   end
 
-  def add_polygon(vertices)
-    add_object(Polygon.new(vertices))
+  def add_polygon(vertices, rgb = Color::WHITE)
+    obj = Polygon.new(vertices)
+    obj.diffuse_rgb = rgb
+    add_object(obj)
   end
 
-  def add_cube(pos, width)
-    add_box(pos, width, width, width)
+  def add_cube(pos, width, rgb = Color::WHITE)
+    add_box(pos, width, width, width, rgb)
   end
 
-  def add_box(pos, width, height, depth)
+  def add_box(pos, width, height, depth, rgb = Color::WHITE)
     faces = []
 
     hw = width / 2.0
@@ -76,7 +80,7 @@ class Scene
         vertex + pos
       end
 
-      add_polygon(face)
+      add_polygon(face, rgb)
     end
   end
 

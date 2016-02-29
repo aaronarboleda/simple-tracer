@@ -1,3 +1,4 @@
+require_relative 'config'
 require_relative 'vector'
 require_relative 'ray'
 require_relative 'scene'
@@ -35,18 +36,18 @@ class SimpleTracer
     #@scene.add_light_source(Vector.new(5, 5, -10), [1.0, 0.7, 0.8])
 
     # snowman
-    @scene.add_sphere(Vector.new(-3, -3, -6), 2)
-    @scene.add_sphere(Vector.new(-3, 0.2, -6), 1.5)
-    @scene.add_sphere(Vector.new(-3, 2.5, -6), 1)
+    @scene.add_sphere(Vector.new(-3, -3, -6), 2, Color::RED)
+    @scene.add_sphere(Vector.new(-3, 0.2, -6), 1.5, Color::YELLOW)
+    @scene.add_sphere(Vector.new(-3, 2.5, -6), 1, Color::BLUE)
 
     #eyes
-    @scene.add_sphere(Vector.new(-3.25, 2.55, -5), 0.15)
-    @scene.add_sphere(Vector.new(-2.65, 2.55, -5), 0.15)
+    #@scene.add_sphere(Vector.new(-3.25, 2.55, -5), 0.15)
+    #@scene.add_sphere(Vector.new(-2.65, 2.55, -5), 0.15)
 
     #baby snowman
-    @scene.add_sphere(Vector.new(1, -4.2, -5.5), 0.8)
-    @scene.add_sphere(Vector.new(1, -3.15, -5.5), 0.6)
-    @scene.add_sphere(Vector.new(1, -2.20, -5.5), 0.4)
+    #@scene.add_sphere(Vector.new(1, -4.2, -5.5), 0.8)
+    #@scene.add_sphere(Vector.new(1, -3.15, -5.5), 0.6)
+    #@scene.add_sphere(Vector.new(1, -2.20, -5.5), 0.4)
 
     # floor
     @scene.add_polygon(
@@ -59,37 +60,7 @@ class SimpleTracer
     )
 
     # cube
-    @scene.add_cube(Vector.new(5.0, -3.5, -7.5), 3.0)
-
-=begin
-    #tree bottom
-    @scene.add_object(Polygon.new(
-      [
-        Vector.new(3, -4, -7.5),
-        Vector.new(7, -4, -7.5),
-        Vector.new(5, -1, -7.5)
-      ]
-    ))
-
-    #tree center
-    @scene.add_object(Polygon.new(
-      [
-        Vector.new(3.5, -2.5, -7.5),
-        Vector.new(6.5, -2.5, -7.5),
-        Vector.new(5, 0, -7.5)
-      ]
-    ))
-
-    #tree top
-    @scene.add_object(Polygon.new(
-      [
-        Vector.new(4, -1, -7.5),
-        Vector.new(6, -1, -7.5),
-        Vector.new(5, 0.3, -7.5)
-      ]
-    ))
-=end
-
+    @scene.add_cube(Vector.new(5.0, -3.5, -7.5), 3.0, Color::GREEN)
   end
 
   def render_scene
@@ -126,34 +97,49 @@ class SimpleTracer
     end
 
     if intersected_object
-      # check for contribution from each light source
-      light_source_contributions = []
-      @scene.light_sources.each do |light_source|
-        to_light_vector = (light_source.pos - intersection_point).normalize
-        shadow_ray = Ray.new(intersection_point, to_light_vector)
-        is_shadowed = @scene.objects.detect do |obj|
-          obj != intersected_object && obj.intersects?(shadow_ray)
-        end
-
-        unless is_shadowed
-          # diffuse contribution is proportional to N * L
-          diffuse_incidence = intersected_object.normal(intersection_point) * to_light_vector
-
-          distance_to_light = (light_source.pos - intersection_point).length
-          attenuation = Light.attenuate(distance_to_light)
-
-          light_source_contributions << light_source.color.map do |rgb|
-            rgb * diffuse_incidence * attenuation
-          end
-        end
-
-        @pixel_buffer[num_pixel_y][num_pixel_x] =
-          light_source_contributions.reduce([0.0, 0.0, 0.0]) do |memo, contrib|
-            [memo[0] + contrib[0], memo[1] + contrib[1], memo[2] + contrib[2]]
-          end
-      end
+      @pixel_buffer[num_pixel_y][num_pixel_x] = get_light_contribution(intersected_object, intersection_point)
     else
       @pixel_buffer[num_pixel_y][num_pixel_x] = [0.2, 0.2, 0.2]
+    end
+  end
+
+  def get_light_contribution(intersected_object, intersection_point)
+    # check for contribution from each light source
+    light_source_contributions = []
+    @scene.light_sources.each do |light_source|
+      to_light_uvec = (light_source.pos - intersection_point).normalize
+      shadow_ray = Ray.new(intersection_point, to_light_uvec)
+      is_shadowed = @scene.objects.detect do |obj|
+        obj != intersected_object && obj.intersects?(shadow_ray)
+      end
+
+      unless is_shadowed
+        diffuse_incidence = intersected_object.normal(intersection_point) * to_light_uvec
+
+        distance_to_light = (light_source.pos - intersection_point).length
+        attenuation = Light.attenuate(distance_to_light)
+
+        light_source_contrib = []
+        light_source.rgb.length.times do |index|
+
+          if Config::LIGHT_SOURCE_RGB_ON
+            light_rgb = light_source.rgb[index]
+          else
+            # white light
+            light_rgb = 1.0
+          end
+
+          diffuse_rgb = intersected_object.diffuse_rgb[index]
+
+          light_source_contrib << (light_rgb * diffuse_rgb * diffuse_incidence * attenuation)
+        end
+
+        light_source_contributions << light_source_contrib
+      end
+    end
+
+    light_source_contributions.reduce([0.0, 0.0, 0.0]) do |memo, contrib|
+      [memo[0] + contrib[0], memo[1] + contrib[1], memo[2] + contrib[2]]
     end
   end
 end

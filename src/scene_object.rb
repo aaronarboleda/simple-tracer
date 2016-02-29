@@ -1,4 +1,6 @@
 class SceneObject
+  attr_accessor :diffuse_rgb
+
   def intersects?(ray)
     false
   end

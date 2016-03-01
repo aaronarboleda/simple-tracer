@@ -5,6 +5,9 @@ require_relative 'light'
 require_relative 'raytrace_tree'
 
 class SimpleTracer
+  MAX_RAYTRACE_DEPTH = 1
+  DEFAULT_BACKGROUND_COLOR = [0.1, 0.2, 0.2]
+
   def initialize(scene)
     @scene = scene
     setup_projection
@@ -57,7 +60,8 @@ class SimpleTracer
     if raytrace_tree.light_value
       @pixel_buffer[num_pixel_y][num_pixel_x] = RaytraceTree.traverse(raytrace_tree)
     else
-      @pixel_buffer[num_pixel_y][num_pixel_x] = [0.1, 0.2, 0.2]
+      #@pixel_buffer[num_pixel_y][num_pixel_x] = DEFAULT_BACKGROUND_COLOR
+      @pixel_buffer[num_pixel_y][num_pixel_x] = [0.0, 0.0, 0.0]
     end
   end
 
@@ -75,11 +79,11 @@ class SimpleTracer
     end
 
     if intersected_object
-      light_value = light_contribution_from(intersected_object, intersection_point)
+      light_value = light_contribution_from(intersected_object, intersection_point, ray.direction_uvec)
       raytrace_tree.light_value = light_value
 
       # reflect/refract up to allowed depth
-      if depth < 1
+      if depth < MAX_RAYTRACE_DEPTH
 
         # R = u - (2u * N) * N
         reflection_origin = intersection_point
@@ -98,7 +102,7 @@ class SimpleTracer
     end
   end
 
-  def light_contribution_from(intersected_object, intersection_point)
+  def light_contribution_from(intersected_object, intersection_point, incoming_ray_direction_uvec)
     light_source_contributions = []
     @scene.light_sources.each do |light_source|
       to_light_uvec = (light_source.pos - intersection_point).normalize
@@ -108,24 +112,36 @@ class SimpleTracer
       end
 
       unless is_shadowed
-        diffuse_incidence = intersected_object.normal(intersection_point) * to_light_uvec
 
         distance_to_light = (light_source.pos - intersection_point).length
         attenuation = Light.attenuate(distance_to_light)
 
         light_source_contrib = []
         light_source.rgb.length.times do |index|
-
           light_rgb = light_source.rgb[index]
 
+          # diffuse
           diffuse_rgb = intersected_object.rgb[index]
           if (intersected_object.reflectivity)
             diffuse_reflectivity = intersected_object.reflectivity
           else
-            diffuse_reflectivity = 0.5
+            diffuse_reflectivity = 1.0
           end
+          diffuse_incidence = intersected_object.normal(intersection_point) * to_light_uvec
+          diffuse_contrib = light_rgb * diffuse_rgb * diffuse_reflectivity * diffuse_incidence
 
-          light_source_contrib << (light_rgb * diffuse_rgb * diffuse_reflectivity * diffuse_incidence * attenuation)
+          # specular
+          specular_rgb = 1.0
+          specular_reflectivity = 1.0
+          specular_exponent = 128.0
+
+          halfway_uvec = (to_light_uvec - incoming_ray_direction_uvec).normalize
+          specular_incidence = (halfway_uvec * intersected_object.normal(intersection_point)) ** specular_exponent
+
+          specular_contrib = light_rgb * specular_rgb * specular_reflectivity * specular_incidence
+
+          # total
+          light_source_contrib << (diffuse_contrib + specular_contrib) * attenuation
         end
 
         light_source_contributions << light_source_contrib

@@ -3,6 +3,7 @@ require_relative 'ray'
 require_relative 'scene'
 require_relative 'light'
 require_relative 'raytrace_tree'
+require 'pry'
 
 class SimpleTracer
   MAX_RAYTRACE_DEPTH = 1
@@ -74,7 +75,7 @@ class SimpleTracer
       if obj.intersects?(ray) && ray.intersection_distance < intersection_distance
         intersected_object = obj
         intersection_distance = ray.intersection_distance
-        intersection_point =  ray.intersection_point
+        intersection_point = ray.intersection_point
       end
     end
 
@@ -85,19 +86,49 @@ class SimpleTracer
       # reflect/refract up to allowed depth
       if depth < MAX_RAYTRACE_DEPTH
 
+        # reflection ray
         # R = u - (2u * N) * N
         reflection_origin = intersection_point
         surface_normal = intersected_object.normal(intersection_point)
         reflection_uvec =
-          ray.direction_uvec -
-          surface_normal.scale(
-            ((ray.direction_uvec.scale(2.0)) * surface_normal)).normalize
+          ray.direction_uvec - surface_normal.scale(
+              ((ray.direction_uvec.scale(2.0)) * surface_normal)).normalize
         reflection_ray = Ray.new(intersection_point, reflection_uvec)
 
         raytrace_tree.reflect_node = RaytraceTree.new
-        raytrace_tree.reflect_node.distance_from_parent = intersection_distance
+        raytrace_tree.reflect_node.distance_from_parent = intersection_distance # TODO: is this a bug
 
         generate_ray(reflection_ray, raytrace_tree.reflect_node, depth + 1)
+
+        # refraction ray
+        if intersected_object.transparent && false
+          # figure out angle of refraction via snell's law
+          begin
+            angle_of_incidence =
+              Math.acos(ray.direction_uvec.reverse * surface_normal)
+
+          index_of_refraction_incident = 1.0 # air
+          index_of_refraction_material = 1.52 # ordinary crown glass
+          refraction_index_coefficient = index_of_refraction_incident / index_of_refraction_material
+
+          angle_of_refraction =
+            Math.acos(Math.sqrt(1 - (((refraction_index_coefficient) ** 2) *
+              (1 - (Math.cos(angle_of_incidence) ** 2)))))
+
+          refraction_uvec = (ray.direction_uvec.scale(refraction_index_coefficient) -
+            surface_normal.scale((Math.cos(angle_of_refraction) - (refraction_index_coefficient * Math.cos(angle_of_incidence))))).normalize
+
+          # TODO: account for hitting backside of clear sphere
+          refraction_ray = Ray.new(intersection_point, refraction_uvec)
+
+          raytrace_tree.refract_node = RaytraceTree.new
+          raytrace_tree.refract_node.distance_from_parent = intersection_distance
+
+          generate_ray(refraction_ray, raytrace_tree.refract_node, depth + 1)
+          rescue StandardError => e
+            puts e.backtrace
+          end
+        end
       end
     end
   end
@@ -122,7 +153,7 @@ class SimpleTracer
 
           # diffuse
           diffuse_rgb = intersected_object.rgb[index]
-          if (intersected_object.reflectivity)
+          if intersected_object.reflectivity
             diffuse_reflectivity = intersected_object.reflectivity
           else
             diffuse_reflectivity = 1.0

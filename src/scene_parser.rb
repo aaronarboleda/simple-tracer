@@ -30,9 +30,13 @@ class SceneParser
         pos = array_to_vector(json_object["pos"])
         radius = json_object["radius"]
         rgb = json_object["rgb"]
+        reflectivity = json_object["reflectivity"]
+        transparent = json_object["transparent"]
 
         scene_object = Scene.create_sphere(pos, radius)
         scene_object.rgb = rgb
+        scene_object.reflectivity = reflectivity #TODO Refactor
+        scene_object.transparent = transparent #TODO Refactor
         scene.add_object(scene_object)
       end
 

@@ -58,6 +58,10 @@ class Vector
     Vector.new(@x / length, @y / length, @z / length)
   end
 
+  def reverse
+    Vector.new(-@x, -@y, -@z)
+  end
+
   def to_s
     "(#{@x}, #{@y}, #{@z})"
   end
